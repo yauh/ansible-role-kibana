@@ -1,0 +1,60 @@
+---
+# tasks file for yauh.kibana
+- name: Make sure the ansible required dependencies are installed
+  apt: pkg={{ item }} state=latest update_cache=yes cache_valid_time=3600
+  with_items:
+    - python-pycurl
+    - python-pip
+
+- name: Install python library
+  pip: name=passlib
+
+- name: Check if kibana is already present
+  stat: path=/usr/local/src/kibana-{{ kibana_version }}-{{ kibana_architecture }}.tar.gz
+  register: kibana_archive
+
+- name: Download Kibana sources
+  get_url:
+    url: "{{ kibana_src_url }}kibana-{{ kibana_version }}-{{ kibana_architecture }}.tar.gz"
+    dest: "/usr/local/src/kibana-{{ kibana_version }}-{{ kibana_architecture }}.tar.gz"
+  when: kibana_archive.stat.exists == False
+
+- name: Ensure home path parent exists
+  file: path="{{ kibana_home_path }}" state=directory
+
+- name: Extract sources
+  unarchive:
+    src: /usr/local/src/kibana-{{ kibana_version }}-{{ kibana_architecture }}.tar.gz
+    dest: "{{ kibana_home_path }}"
+    creates: "{{ kibana_home_path }}/config/kibana.yml"
+    copy: no
+
+- name: Link extracted sources to plain kibana directory
+  file: src="{{ kibana_home_path }}/kibana-{{ kibana_version }}-{{ kibana_architecture }}" dest="{{ kibana_home_path }}/kibana" state=link
+
+- name: Configure Kibana
+  lineinfile: >
+    dest={{ kibana_home_path }}/kibana/config/kibana.yml
+    regexp="{{ item.regexp }}"
+    line="{{ item.line }}"
+    state=present
+  with_items:
+    - "{{ kibana_config_settings }}"
+
+- name: Copy kibana startup script
+  template: src=kibana.j2 dest=/etc/init.d/kibana owner=root group=root mode=0755
+
+- name: Ensure kibana service is started and enabled on boot
+  service: name=kibana state=started enabled=yes
+
+- name: Configure nginx proxy site
+  template: src=kibana.conf.j2 dest=/etc/nginx/sites-available/kibana.conf
+
+- name: Enable nginx proxy site
+  file: src=/etc/nginx/sites-available/kibana.conf dest=/etc/nginx/sites-enabled/kibana.conf state=link
+  notify: restart nginx
+
+- name: Setup http passwords
+  htpasswd: path=/etc/nginx/kibana.users name={{ item.name }} password={{ item.password }} owner=root group=www-data mode=0640
+  with_items:
+    - "{{ kibana_users }}"

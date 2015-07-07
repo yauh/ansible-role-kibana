@@ -1,0 +1,7 @@
+---
+# handlers file for yauh.kibana
+- name: restart nginx
+  service: name=nginx state=restarted
+
+- name: restart kibana
+  service: name=kibana state=restarted

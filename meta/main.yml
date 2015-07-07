@@ -1,0 +1,18 @@
+---
+galaxy_info:
+  author: Stephan Hochhaus
+  description: Install Kibana
+  company: freelance
+  license: BSD
+  min_ansible_version: 1.7
+  platforms:
+    - name: Ubuntu
+      versions:
+        - trusty
+        - utopic
+        - vivid
+  categories:
+   - monitoring
+dependencies:
+  - { role: yauh.elasticsearch }
+  - { role: yauh.nginx }

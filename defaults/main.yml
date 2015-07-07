@@ -1,0 +1,14 @@
+---
+# defaults file for yauh.kibana
+kibana_home_path: /opt
+kibana_src_url: https://download.elastic.co/kibana/kibana/
+kibana_version: 4.1.1
+kibana_architecture: linux-x64
+kibana_config_settings:
+  - regexp: '^host'
+    line: 'host: "localhost"'
+  - regexp: '^elasticsearch_url'
+    line: 'elasticsearch_url: "http://localhost:9200"'
+kibana_users:
+  - name: admin
+    password: kibana
