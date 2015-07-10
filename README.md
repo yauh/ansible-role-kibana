@@ -1,5 +1,5 @@
 # yauh.kibana
-Ansible role to install Kibana
+Ansible role for setting up Kibana
 
 ## Requirements
 - Nginx (e.g. installed via `yauh.nginx`)
